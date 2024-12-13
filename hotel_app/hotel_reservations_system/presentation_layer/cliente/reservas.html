@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mis Reservas - Hotel XYZ</title>
+    <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
+    <link rel="stylesheet" href="../assets/css/jquery.dataTables.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <!--#include file="../header.html" -->
+
+    <div class="container">
+        <h1 class="mt-4">Mis Reservas</h1>
+        <table id="tabla-reservas" class="display">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Habitación</th>
+                    <th>Fecha Inicio</th>
+                    <th>Fecha Fin</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Aquí se cargarán las reservas del cliente mediante AJAX -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Footer -->
+    <!--#include file="../footer.html" -->
+
+    <script src="../assets/js/jquery.min.js"></script>
+    <script src="../assets/js/bootstrap.min.js"></script>
+    <script src="../assets/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Obtener el token del almacenamiento local
+            var token = localStorage.getItem('token');
+            
+            // Si no hay token, redirigir al login
+            if (!token) {
+                window.location.href = '../login.html';
+                return;
+            }
+
+            // Obtener las reservas del cliente
+            $.ajax({
+                url: '/api/cliente/reservas',
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                },
+                success: function(data) {
+                    var reservas = data;
+                    $.each(reservas, function(index, reserva) {
+                        var acciones = '';
+                        if (reserva.estado === 'Pendiente') {
+                            acciones = `
+                                <button class="btn btn-danger btn-sm" onclick="cancelarReserva(${reserva.id})">Cancelar</button>
+                            `;
+                        }
+
+                        var reservaHtml = `
+                            <tr>
+                                <td>${reserva.id}</td>
+                                <td>${reserva.habitacion_numero}</td>
+                                <td>${reserva.fecha_inicio}</td>
+                                <td>${reserva.fecha_fin}</td>
+                                <td>${reserva.estado}</td>
+                                <td>${acciones}</td>
+                            </tr>
+                        `;
+                        $('#tabla-reservas tbody').append(reservaHtml);
+                    });
+
+                    // Inicializar DataTables
+                    $('#tabla-reservas').DataTable();
+                },
+                error: function(error) {
+                    console.log(error);
+                    alert('No se pudieron cargar las reservas.');
+                }
+            });
+        });
+
+        // Función para cancelar una reserva
+        function cancelarReserva(reservaId) {
+            var token = localStorage.getItem('token');
+            $.ajax({
+                url: '/api/cliente/reservas/cancelar/' + reservaId,
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                },
+                success: function(response) {
+                    alert('Reserva cancelada con éxito.');
+                    location.reload(); // Recargar la página para ver los cambios
+                },
+                error: function(error) {
+                    console.log(error);
+                    alert('Error al cancelar la reserva.');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

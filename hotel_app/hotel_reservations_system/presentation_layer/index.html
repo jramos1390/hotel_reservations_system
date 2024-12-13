@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Hotel XYZ - Inicio</title>
+
+    <!-- Cargar Bootstrap desde la CDN -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    
+    <!-- Cargar tu archivo CSS personalizado desde tu servidor local (si necesario) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <!-- Header -->
+    {% include 'header.html' %}
+    
+    <!-- Contenido principal -->
+    <div class="container">
+        <h1 class="mt-4">Bienvenido al Hotel XYZ</h1>
+        <p>Disfruta de una experiencia única en nuestro hotel de lujo.</p>
+        
+        <!-- Mostrar habitaciones disponibles -->
+        <h2>Habitaciones Disponibles</h2>
+        <div class="row" id="habitaciones-disponibles">
+            <!-- Aquí se cargarán las habitaciones mediante AJAX -->
+        </div>
+    </div>
+
+    <!-- Footer -->
+    {% include 'footer.html' %}
+
+    <!-- Enlaces a JavaScript (al final del archivo, antes de </body>) -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script> 
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+
+<script>
+    $(document).ready(function() {
+        // Cargar habitaciones disponibles al cargar la página
+        $.ajax({
+            url: '/api/habitaciones/disponibles', // Endpoint para obtener habitaciones disponibles
+            method: 'GET',
+            success: function(data) {
+                if (data.length === 0) {
+                    $('#habitaciones-disponibles').append('<p>No hay habitaciones disponibles en este momento.</p>');
+                    return;
+                }
+
+                // Generar tarjetas dinámicamente
+                data.forEach(habitacion => {
+                    const habitacionHtml = `
+                        <div class="col-md-4">
+                            <div class="card mb-4">
+                                <img class="card-img-top" src="${habitacion.imagen || 'path/to/default-image.jpg'}" alt="Imagen de la habitación">
+                                <div class="card-body">
+                                    <h5 class="card-title">Habitación ${habitacion.numero_habitacion}</h5>
+                                    <p class="card-text"><strong>Tipo:</strong> ${habitacion.tipo}</p>
+                                    <p class="card-text"><strong>Descripción:</strong> ${habitacion.descripcion}</p>
+                                    <p class="card-text"><strong>Precio:</strong> $${habitacion.precio}</p>
+                                    <p class="card-text"><strong>Estado:</strong> ${habitacion.estado}</p>
+                                    <a href="/login" class="btn btn-primary">Reservar</a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    $('#habitaciones-disponibles').append(habitacionHtml);
+                });
+            },
+            error: function(error) {
+                console.error('Error al cargar las habitaciones:', error);
+                $('#habitaciones-disponibles').append('<p>Ocurrió un error al cargar las habitaciones. Intente nuevamente.</p>');
+            }
+        });
+    });
+</script>
+
+
+</body>
+</html>
